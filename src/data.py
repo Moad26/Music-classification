@@ -93,7 +93,7 @@ class music_dataset(Dataset):
     def __len__(self) -> int:
         return len(self.annotation_df)
 
-    def __getitem__(self, index: int):
+    def __getitem__(self, index: int) -> BatchItem:
         song_id = int(self.annotation_df.iloc[index]["song_id"])
         arousal = self.annotation_df.iloc[index]["arousal_mean"]
         valence = self.annotation_df.iloc[index]["valence_mean"]
