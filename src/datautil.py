@@ -1,4 +1,5 @@
 import random
+from pathlib import Path
 from typing import Optional, Tuple
 
 import torch
@@ -8,7 +9,7 @@ from torchaudio import transforms
 
 class AudioUtils:
     @staticmethod
-    def open(audio_file_path: str) -> Tuple[torch.Tensor, int]:
+    def open(audio_file_path: Path) -> Tuple[torch.Tensor, int]:
         sig, sr = torchaudio.load(audio_file_path)
         return (sig, sr)
 
