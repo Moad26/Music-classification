@@ -10,7 +10,7 @@ from torch.utils.data import Dataset
 
 from datautil import AudioUtils
 
-ROOT_DIR = Path(__file__).parent
+ROOT_DIR = Path(__file__).parent.parent
 DATA_DIR = ROOT_DIR / "input"
 AUDIO_DIR = DATA_DIR / "MEMD_audio"
 ANNOTATION_DIR = (
