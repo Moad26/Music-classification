@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -eu
 
+mkdir -p model
+
 echo "Do u wanna leave the .zip files [y/n]"
 read -r conf
 while "$conf" != "y" && "$conf" != "n"; do

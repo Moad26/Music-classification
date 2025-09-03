@@ -9,15 +9,7 @@ from sklearn.preprocessing import StandardScaler
 from torch.utils.data import Dataset
 
 from datautil import AudioUtils
-
-ROOT_DIR = Path(__file__).parent.parent
-DATA_DIR = ROOT_DIR / "input"
-AUDIO_DIR = DATA_DIR / "MEMD_audio"
-ANNOTATION_DIR = (
-    DATA_DIR / "annotations" / "annotations averaged per song" / "song_level"
-)
-DF1_DIR = ANNOTATION_DIR / "static_annotations_averaged_songs_1_2000.csv"
-DF2_DIR = ANNOTATION_DIR / "static_annotations_averaged_songs_2000_2058.csv"
+from paths import ANNOTATION_DIR, AUDIO_DIR
 
 BatchItem = namedtuple("BatchItem", ["spectrogram", "targets", "song_id"])
 
@@ -27,6 +19,8 @@ class music_dataset(Dataset):
         self,
         df_path: Path = ANNOTATION_DIR,
         audios_path: Path = AUDIO_DIR,
+        scaler: StandardScaler = StandardScaler(),
+        fit_scaler: bool = False,
         new_ch: int = 1,
         newsr: int = 22050,
         max_ms: int = 30000,
@@ -62,6 +56,14 @@ class music_dataset(Dataset):
         self.n_time_masks = n_time_masks
         self.normalize = normalize
 
+        self.scaler: StandardScaler = scaler
+        if fit_scaler:
+            self.scaler = StandardScaler().fit(
+                self.annotation_df[["valence_mean", "arousal_mean"]]
+            )
+        else:
+            self.scaler = scaler
+
         self.set_seed(seed)
 
         if normalize:
@@ -73,8 +75,8 @@ class music_dataset(Dataset):
         torch.manual_seed(seed)
 
     def normalize_df(self):
-        scaler = StandardScaler()
-        self.annotation_df[["valence_mean", "arousal_mean"]] = scaler.fit_transform(
+
+        self.annotation_df[["valence_mean", "arousal_mean"]] = self.scaler.transform(
             self.annotation_df[["valence_mean", "arousal_mean"]]
         )
 
