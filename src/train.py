@@ -1,3 +1,4 @@
+import datetime
 import warnings
 from pathlib import Path
 from typing import Optional
@@ -7,6 +8,7 @@ import torch
 import torch.nn as nn
 from torch.optim import Adam
 from torch.utils.data import DataLoader
+from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
 
 from paths import MODEL_DIR
@@ -99,6 +101,10 @@ def train_model(
     resume: bool = True,
     start_epoch: int = 0,
 ):
+    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    log_dir = MODEL_DIR / "runs" / f"training_{timestamp}"
+    writer = SummaryWriter(log_dir=log_dir)
+
     model = model.to(device)
     optimizer = Adam(model.parameters(), lr=lr, weight_decay=1e-4)
     criterion = nn.MSELoss()
@@ -147,6 +153,18 @@ def train_model(
 
             avg_train_loss = train_loss / len(train_loader)
             avg_val_loss = val_loss / len(val_loader)
+
+            # Log to TensorBoard
+            writer.add_scalar("Loss/Train", avg_train_loss, epoch)
+            writer.add_scalar("Loss/Validation", avg_val_loss, epoch)
+            writer.add_scalar("Learning Rate", optimizer.param_groups[0]["lr"], epoch)
+
+            # You can also log model weights histograms occasionally
+            if epoch % 10 == 0:
+                for name, param in model.named_parameters():
+                    writer.add_histogram(f"Weights/{name}", param, epoch)
+                    if param.grad is not None:
+                        writer.add_histogram(f"Gradients/{name}", param.grad, epoch)
 
         print(
             f"Epoch {epoch+1}: Train Loss: {avg_train_loss:.4f}, Val Loss: {avg_val_loss:.4f}"
