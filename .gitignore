@@ -12,3 +12,4 @@ wheels/
 # Datasets
 input/
 model/*
+visualisation/*

@@ -11,7 +11,8 @@ from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
 
-from paths import MODEL_DIR
+from paths import MODEL_DIR, VISUALISATION_DIR
+from visual import Visualizer
 
 warnings.filterwarnings("ignore", category=UserWarning, module="torchaudio")
 
@@ -95,15 +96,18 @@ def train_model(
     epochs: int = 50,
     lr: float = 1e-3,
     device: str = "cuda" if torch.cuda.is_available() else "cpu",
-    es_patience: int = 7,
-    lr_patience: int = 7,
+    es_patience: int = 10,
+    lr_patience: int = 3,
     save_path: Path = MODEL_DIR / Path("model_checkpoint.pt"),
     resume: bool = True,
     start_epoch: int = 0,
 ):
     timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-    log_dir = MODEL_DIR / "runs" / f"training_{timestamp}"
+    log_dir = VISUALISATION_DIR / "runs" / f"training_{timestamp}"
+    log_dir.mkdir(parents=True, exist_ok=True)
+
     writer = SummaryWriter(log_dir=log_dir)
+    visualizer = Visualizer(log_dir)
 
     model = model.to(device)
     optimizer = Adam(model.parameters(), lr=lr, weight_decay=1e-4)
@@ -139,6 +143,8 @@ def train_model(
 
         model.eval()
         val_loss = 0.0
+        all_predictions = []
+        all_targets = []
 
         with torch.no_grad():
             for batch in tqdm(
@@ -151,15 +157,27 @@ def train_model(
                 loss = criterion(outputs, targets)
                 val_loss += loss.item()
 
+                all_predictions.append(outputs)
+                all_targets.append(targets)
+
+            all_predictions = torch.cat(all_predictions, dim=0)
+            all_targets = torch.cat(all_targets, dim=0)
+
             avg_train_loss = train_loss / len(train_loader)
             avg_val_loss = val_loss / len(val_loader)
 
-            # Log to TensorBoard
             writer.add_scalar("Loss/Train", avg_train_loss, epoch)
             writer.add_scalar("Loss/Validation", avg_val_loss, epoch)
             writer.add_scalar("Learning Rate", optimizer.param_groups[0]["lr"], epoch)
 
-            # You can also log model weights histograms occasionally
+            if epoch % 5 == 0 or epoch == epochs - 1:
+                valence_corr, arousal_corr = visualizer.log_all_metrics(
+                    all_predictions, all_targets, epoch
+                )
+                print(
+                    f"Valence Correlation: {valence_corr:.4f}, Arousal Correlation: {arousal_corr:.4f}"
+                )
+
             if epoch % 10 == 0:
                 for name, param in model.named_parameters():
                     writer.add_histogram(f"Weights/{name}", param, epoch)
@@ -175,3 +193,6 @@ def train_model(
         if early_stopping(epoch, avg_train_loss, avg_val_loss, model, optimizer):
             print("Early stopping triggered")
             break
+
+    writer.close()
+    visualizer.close()

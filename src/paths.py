@@ -10,3 +10,7 @@ DF1_DIR = ANNOTATION_DIR / "static_annotations_averaged_songs_1_2000.csv"
 DF2_DIR = ANNOTATION_DIR / "static_annotations_averaged_songs_2000_2058.csv"
 
 MODEL_DIR = ROOT_DIR / "model"
+MODEL_DIR.mkdir(parents=True, exist_ok=True)
+
+VISUALISATION_DIR = ROOT_DIR / "visualisation"
+VISUALISATION_DIR.mkdir(parents=True, exist_ok=True)

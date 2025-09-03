@@ -139,13 +139,13 @@ def create_parser():
     train_group.add_argument(
         "--early-stopping-patience",
         type=int,
-        default=7,
+        default=10,
         help="Early stopping patience (epochs)",
     )
     train_group.add_argument(
         "--lr-patience",
         type=int,
-        default=7,
+        default=3,
         help="Learning rate scheduler patience (epochs)",
     )
 
