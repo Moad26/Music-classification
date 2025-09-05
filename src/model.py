@@ -85,7 +85,7 @@ class ResidualBlock(nn.Module):
 
 class CNN_Music_classifier(nn.Module):
     def __init__(
-        self, num_channels: int = 1, num_classes: int = 2, dropout: float = 0.1
+        self, num_channels: int = 1, num_classes: int = 2, dropout: float = 0.5
     ) -> None:
         super().__init__()
         self.dropout = dropout
@@ -94,21 +94,24 @@ class CNN_Music_classifier(nn.Module):
             nn.BatchNorm2d(64),
             nn.ReLU(inplace=True),
             nn.MaxPool2d(kernel_size=3, stride=2, padding=1),
+            nn.BatchNorm2d(64),
         )
         self.layer1 = self._make_layer(
-            in_channels=64, out_channels=64, num_blocks=4, first_stride=1
+            in_channels=64, out_channels=64, num_blocks=2, first_stride=1
         )
         self.layer2 = self._make_layer(
-            in_channels=64, out_channels=128, num_blocks=4, first_stride=2
+            in_channels=64, out_channels=128, num_blocks=2, first_stride=2
         )
         self.layer3 = self._make_layer(
-            in_channels=128, out_channels=256, num_blocks=4, first_stride=2
+            in_channels=128, out_channels=256, num_blocks=2, first_stride=2
         )
         self.layer4 = self._make_layer(
-            in_channels=256, out_channels=512, num_blocks=4, first_stride=2
+            in_channels=256, out_channels=512, num_blocks=2, first_stride=2
         )
         self.ap = nn.AdaptiveAvgPool2d((1, 1))
-        self.fc = nn.Linear(512, num_classes)
+        self.fc = nn.Sequential(
+            nn.Linear(512, 256), nn.ReLU(), nn.Dropout(0.3), nn.Linear(256, num_classes)
+        )
         self._init_layer()
 
     def _init_layer(self):

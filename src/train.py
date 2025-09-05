@@ -94,10 +94,10 @@ def train_model(
     train_loader: DataLoader,
     val_loader: DataLoader,
     epochs: int = 50,
-    lr: float = 1e-3,
+    lr: float = 5e-4,
     device: str = "cuda" if torch.cuda.is_available() else "cpu",
     es_patience: int = 10,
-    lr_patience: int = 3,
+    lr_patience: int = 5,
     save_path: Path = MODEL_DIR / Path("model_checkpoint.pt"),
     resume: bool = True,
     start_epoch: int = 0,
@@ -110,12 +110,14 @@ def train_model(
     visualizer = Visualizer(log_dir)
 
     model = model.to(device)
-    optimizer = Adam(model.parameters(), lr=lr, weight_decay=1e-4)
+    optimizer = Adam(model.parameters(), lr=lr, weight_decay=1e-3)
     criterion = nn.MSELoss()
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
         optimizer, patience=lr_patience
     )
-    early_stopping = EarlyStopping(patience=es_patience, path=save_path, verbose=True)
+    early_stopping = EarlyStopping(
+        patience=es_patience, path=save_path, verbose=True, min_delta=0.001
+    )
 
     if resume and save_path.exists():
         print(f"Resuming from checkpoint: {save_path}")
@@ -125,6 +127,10 @@ def train_model(
         start_epoch = checkpoint["epoch"] + 1
         early_stopping.val_loss_min = checkpoint["val_loss"]
         print(f"Resumed from epoch {start_epoch}")
+
+    print(f"Training started on device: {device}")
+    print(f"Logs will be saved to: {log_dir}")
+    print(f"Model checkpoints will be saved to: {save_path}")
 
     for epoch in range(start_epoch, epochs):
         model.train()
@@ -137,6 +143,7 @@ def train_model(
             outputs = model(spectrograms)
             loss = criterion(outputs, targets)
             loss.backward()
+            torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
             optimizer.step()
 
             train_loss += loss.item()
@@ -166,33 +173,38 @@ def train_model(
             avg_train_loss = train_loss / len(train_loader)
             avg_val_loss = val_loss / len(val_loader)
 
+            # Log basic metrics
             writer.add_scalar("Loss/Train", avg_train_loss, epoch)
             writer.add_scalar("Loss/Validation", avg_val_loss, epoch)
             writer.add_scalar("Learning Rate", optimizer.param_groups[0]["lr"], epoch)
 
-            if epoch % 5 == 0 or epoch == epochs - 1:
-                valence_corr, arousal_corr = visualizer.log_all_metrics(
-                    all_predictions, all_targets, epoch
-                )
-                print(
-                    f"Valence Correlation: {valence_corr:.4f}, Arousal Correlation: {arousal_corr:.4f}"
-                )
+            print(
+                f"Epoch {epoch+1}: Train Loss: {avg_train_loss:.4f}, Val Loss: {avg_val_loss:.4f}"
+            )
 
-            if epoch % 10 == 0:
+            # Log all comprehensive metrics every epoch
+            valence_corr, arousal_corr = visualizer.log_all_metrics(
+                all_predictions, all_targets, epoch
+            )
+
+            if epoch % 5 == 0:
                 for name, param in model.named_parameters():
                     writer.add_histogram(f"Weights/{name}", param, epoch)
                     if param.grad is not None:
                         writer.add_histogram(f"Gradients/{name}", param.grad, epoch)
-
-        print(
-            f"Epoch {epoch+1}: Train Loss: {avg_train_loss:.4f}, Val Loss: {avg_val_loss:.4f}"
-        )
 
         scheduler.step(avg_val_loss)
 
         if early_stopping(epoch, avg_train_loss, avg_val_loss, model, optimizer):
             print("Early stopping triggered")
             break
+
+    print("\nTraining completed!")
+    print(f"Best model saved to: {save_path}")
+    print(f"TensorBoard logs saved to: {log_dir}")
+    print(
+        f"You can view the training progress by running: tensorboard --logdir {log_dir}"
+    )
 
     writer.close()
     visualizer.close()

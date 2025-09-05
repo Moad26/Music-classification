@@ -69,26 +69,26 @@ def create_parser():
     aug_group.add_argument(
         "--aug-prob",
         type=float,
-        default=0.5,
+        default=0.8,
         help="Probability of applying augmentation",
     )
     aug_group.add_argument(
         "--shift-limit",
         type=float,
-        default=0.2,
+        default=0.3,
         help="Maximum time shift as fraction of audio length",
     )
     aug_group.add_argument(
         "--max-mask-pct",
         type=float,
-        default=0.1,
+        default=0.2,
         help="Maximum percentage of spectrogram to mask",
     )
     aug_group.add_argument(
-        "--n-freq-masks", type=int, default=2, help="Number of frequency masks to apply"
+        "--n-freq-masks", type=int, default=3, help="Number of frequency masks to apply"
     )
     aug_group.add_argument(
-        "--n-time-masks", type=int, default=2, help="Number of time masks to apply"
+        "--n-time-masks", type=int, default=3, help="Number of time masks to apply"
     )
 
     # Model arguments
@@ -96,7 +96,7 @@ def create_parser():
     model_group.add_argument(
         "--dropout",
         type=float,
-        default=0.2,
+        default=0.5,
         help="Dropout rate for model regularization",
     )
     model_group.add_argument(
@@ -115,7 +115,7 @@ def create_parser():
         "--learning-rate",
         "--lr",
         type=float,
-        default=1e-3,
+        default=5e-4,
         help="Initial learning rate",
     )
     train_group.add_argument(
@@ -139,13 +139,13 @@ def create_parser():
     train_group.add_argument(
         "--early-stopping-patience",
         type=int,
-        default=10,
+        default=20,
         help="Early stopping patience (epochs)",
     )
     train_group.add_argument(
         "--lr-patience",
         type=int,
-        default=3,
+        default=10,
         help="Learning rate scheduler patience (epochs)",
     )
 
