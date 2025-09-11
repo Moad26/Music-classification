@@ -75,7 +75,6 @@ class music_dataset(Dataset):
         torch.manual_seed(seed)
 
     def normalize_df(self):
-
         self.annotation_df[["valence_mean", "arousal_mean"]] = self.scaler.transform(
             self.annotation_df[["valence_mean", "arousal_mean"]]
         )
