@@ -8,8 +8,8 @@ import torch
 from sklearn.preprocessing import StandardScaler
 from torch.utils.data import Dataset
 
-from datautil import AudioUtils
-from paths import ANNOTATION_DIR, AUDIO_DIR
+from src.datautil import AudioUtils
+from src.paths import ANNOTATION_DIR, AUDIO_DIR
 
 BatchItem = namedtuple("BatchItem", ["spectrogram", "targets", "song_id"])
 

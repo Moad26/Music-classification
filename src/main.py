@@ -4,10 +4,10 @@ from pathlib import Path
 from sklearn.preprocessing import StandardScaler
 from torch.utils.data import DataLoader
 
-from data import music_dataset
-from model import CNN_Music_classifier
-from paths import ANNOTATION_DIR, AUDIO_DIR, MODEL_DIR
-from train import train_model
+from src.data import music_dataset
+from src.model import CNN_Music_classifier
+from src.paths import ANNOTATION_DIR, AUDIO_DIR, MODEL_DIR
+from src.train import train_model
 
 
 def create_parser():

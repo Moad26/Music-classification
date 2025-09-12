@@ -11,8 +11,8 @@ from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
 
-from paths import MODEL_DIR, VISUALISATION_DIR
-from visual import Visualizer
+from src.paths import MODEL_DIR, VISUALISATION_DIR
+from src.visual import Visualizer
 
 warnings.filterwarnings("ignore", category=UserWarning, module="torchaudio")
 
@@ -135,7 +135,7 @@ def train_model(
     for epoch in range(start_epoch, epochs):
         model.train()
         train_loss = 0.0
-        for batch in tqdm(train_loader, desc=f"Epoch {epoch+1}/{epochs} - Training"):
+        for batch in tqdm(train_loader, desc=f"Epoch {epoch + 1}/{epochs} - Training"):
             spectrograms = batch.spectrogram.to(device)
             targets = batch.targets.to(device)
 
@@ -155,7 +155,7 @@ def train_model(
 
         with torch.no_grad():
             for batch in tqdm(
-                val_loader, desc=f"Epoch {epoch+1}/{epochs} - Validating"
+                val_loader, desc=f"Epoch {epoch + 1}/{epochs} - Validating"
             ):
                 spectrograms = batch.spectrogram.to(device)
                 targets = batch.targets.to(device)
@@ -179,7 +179,7 @@ def train_model(
             writer.add_scalar("Learning Rate", optimizer.param_groups[0]["lr"], epoch)
 
             print(
-                f"Epoch {epoch+1}: Train Loss: {avg_train_loss:.4f}, Val Loss: {avg_val_loss:.4f}"
+                f"Epoch {epoch + 1}: Train Loss: {avg_train_loss:.4f}, Val Loss: {avg_val_loss:.4f}"
             )
 
             # Log all comprehensive metrics every epoch
